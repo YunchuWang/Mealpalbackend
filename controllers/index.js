@@ -14,8 +14,8 @@ exports.getPost = (req,res) => {
   // });
   Post.find({}).sort('-time').exec(function(err, posts) {
     if (err) return next(err);
-    console.log(posts);
-    res.send(posts);
+    // console.log(posts);
+    res.status(200).send(posts);
   });
   // Post.find({}, function(err, posts) {
   //   if (err) return next(err);
@@ -36,5 +36,5 @@ exports.addPost = (req,res) => {
     if (err) return console.error(err);
     console.dir(newPost);
   });
-  res.send("yeah");
+  res.status(200).send("yeah");
 }

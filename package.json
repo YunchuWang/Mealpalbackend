@@ -22,6 +22,8 @@
     "clockwork": "^0.1.4",
     "compression": "^1.6.2",
     "connect-mongo": "^1.3.2",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.1",
     "dotenv": "^2.0.0",
     "errorhandler": "^1.4.3",
     "express": "^4.14.0",

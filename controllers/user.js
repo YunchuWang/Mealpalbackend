@@ -35,7 +35,7 @@ exports.postLogin = (req, res, next) => {
   // }
   // console.log(req);
   // console.log(req.body);
-  passport.authenticate('local', (err, user, info) => {
+  passport.authenticate('local', {session: true}, (err, user, info) => {
     // console.log("sss");
     if (err) {
       res.status(200).send({status:"fail"});

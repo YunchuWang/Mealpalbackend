@@ -15,18 +15,28 @@ const OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
 const User = require('../models/User');
 
 passport.serializeUser((user, done) => {
+  ///issue!
+  // console.log(user);
   done(null, user.id);
 });
 
 passport.deserializeUser((id, done) => {
-  User.findById(id, (err, user) => {
-    done(err, user);
+  // User.findById(id, (err, user) => {
+  //   done(err, user);
+  // });
+  console.log("pasaakalsdjakldj");
+  User.findById(id, function(err, user){
+    if(err){
+      done(err);
+    }
+    done(null, user);
   });
+
 });
 
 /**
- * Sign in using Email and Password.
- */
+* Sign in using Email and Password.
+*/
 passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
   User.findOne({ email: email.toLowerCase() }, (err, user) => {
     if (err) { return done(err); }
@@ -44,23 +54,23 @@ passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, don
 }));
 
 /**
- * OAuth Strategy Overview
- *
- * - User is already logged in.
- *   - Check if there is an existing account with a provider id.
- *     - If there is, return an error message. (Account merging not supported)
- *     - Else link new OAuth account with currently logged-in user.
- * - User is not logged in.
- *   - Check if it's a returning user.
- *     - If returning user, sign in and we are done.
- *     - Else check if there is an existing account with user's email.
- *       - If there is, return an error message.
- *       - Else create a new account.
- */
+* OAuth Strategy Overview
+*
+* - User is already logged in.
+*   - Check if there is an existing account with a provider id.
+*     - If there is, return an error message. (Account merging not supported)
+*     - Else link new OAuth account with currently logged-in user.
+* - User is not logged in.
+*   - Check if it's a returning user.
+*     - If returning user, sign in and we are done.
+*     - Else check if there is an existing account with user's email.
+*       - If there is, return an error message.
+*       - Else create a new account.
+*/
 
 /**
- * Sign in with Facebook.
- */
+* Sign in with Facebook.
+*/
 passport.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_ID,
   clientSecret: process.env.FACEBOOK_SECRET,
@@ -119,8 +129,8 @@ passport.use(new FacebookStrategy({
 }));
 
 /**
- * Sign in with GitHub.
- */
+* Sign in with GitHub.
+*/
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_ID,
   clientSecret: process.env.GITHUB_SECRET,
@@ -231,8 +241,8 @@ passport.use(new TwitterStrategy({
 }));
 
 /**
- * Sign in with Google.
- */
+* Sign in with Google.
+*/
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_ID,
   clientSecret: process.env.GOOGLE_SECRET,
@@ -289,8 +299,8 @@ passport.use(new GoogleStrategy({
 }));
 
 /**
- * Sign in with LinkedIn.
- */
+* Sign in with LinkedIn.
+*/
 passport.use(new LinkedInStrategy({
   clientID: process.env.LINKEDIN_ID,
   clientSecret: process.env.LINKEDIN_SECRET,
@@ -351,8 +361,8 @@ passport.use(new LinkedInStrategy({
 }));
 
 /**
- * Sign in with Instagram.
- */
+* Sign in with Instagram.
+*/
 passport.use(new InstagramStrategy({
   clientID: process.env.INSTAGRAM_ID,
   clientSecret: process.env.INSTAGRAM_SECRET,
@@ -404,8 +414,8 @@ passport.use(new InstagramStrategy({
 }));
 
 /**
- * Tumblr API OAuth.
- */
+* Tumblr API OAuth.
+*/
 passport.use('tumblr', new OAuthStrategy({
   requestTokenURL: 'http://www.tumblr.com/oauth/request_token',
   accessTokenURL: 'http://www.tumblr.com/oauth/access_token',
@@ -415,20 +425,20 @@ passport.use('tumblr', new OAuthStrategy({
   callbackURL: '/auth/tumblr/callback',
   passReqToCallback: true
 },
-  (req, token, tokenSecret, profile, done) => {
-    User.findById(req.user._id, (err, user) => {
-      if (err) { return done(err); }
-      user.tokens.push({ kind: 'tumblr', accessToken: token, tokenSecret });
-      user.save((err) => {
-        done(err, user);
-      });
+(req, token, tokenSecret, profile, done) => {
+  User.findById(req.user._id, (err, user) => {
+    if (err) { return done(err); }
+    user.tokens.push({ kind: 'tumblr', accessToken: token, tokenSecret });
+    user.save((err) => {
+      done(err, user);
     });
-  }
+  });
+}
 ));
 
 /**
- * Foursquare API OAuth.
- */
+* Foursquare API OAuth.
+*/
 passport.use('foursquare', new OAuth2Strategy({
   authorizationURL: 'https://foursquare.com/oauth2/authorize',
   tokenURL: 'https://foursquare.com/oauth2/access_token',
@@ -437,20 +447,20 @@ passport.use('foursquare', new OAuth2Strategy({
   callbackURL: process.env.FOURSQUARE_REDIRECT_URL,
   passReqToCallback: true
 },
-  (req, accessToken, refreshToken, profile, done) => {
-    User.findById(req.user._id, (err, user) => {
-      if (err) { return done(err); }
-      user.tokens.push({ kind: 'foursquare', accessToken });
-      user.save((err) => {
-        done(err, user);
-      });
+(req, accessToken, refreshToken, profile, done) => {
+  User.findById(req.user._id, (err, user) => {
+    if (err) { return done(err); }
+    user.tokens.push({ kind: 'foursquare', accessToken });
+    user.save((err) => {
+      done(err, user);
     });
-  }
+  });
+}
 ));
 
 /**
- * Steam API OpenID.
- */
+* Steam API OpenID.
+*/
 passport.use(new OpenIDStrategy({
   apiKey: process.env.STEAM_KEY,
   providerURL: 'http://steamcommunity.com/openid',
@@ -486,8 +496,8 @@ passport.use(new OpenIDStrategy({
 }));
 
 /**
- * Pinterest API OAuth.
- */
+* Pinterest API OAuth.
+*/
 passport.use('pinterest', new OAuth2Strategy({
   authorizationURL: 'https://api.pinterest.com/oauth/',
   tokenURL: 'https://api.pinterest.com/v1/oauth/token',
@@ -496,20 +506,20 @@ passport.use('pinterest', new OAuth2Strategy({
   callbackURL: process.env.PINTEREST_REDIRECT_URL,
   passReqToCallback: true
 },
-  (req, accessToken, refreshToken, profile, done) => {
-    User.findById(req.user._id, (err, user) => {
-      if (err) { return done(err); }
-      user.tokens.push({ kind: 'pinterest', accessToken });
-      user.save((err) => {
-        done(err, user);
-      });
+(req, accessToken, refreshToken, profile, done) => {
+  User.findById(req.user._id, (err, user) => {
+    if (err) { return done(err); }
+    user.tokens.push({ kind: 'pinterest', accessToken });
+    user.save((err) => {
+      done(err, user);
     });
-  }
+  });
+}
 ));
 
 /**
- * Login Required middleware.
- */
+* Login Required middleware.
+*/
 exports.isAuthenticated = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
@@ -518,8 +528,8 @@ exports.isAuthenticated = (req, res, next) => {
 };
 
 /**
- * Authorization Required middleware.
- */
+* Authorization Required middleware.
+*/
 exports.isAuthorized = (req, res, next) => {
   const provider = req.path.split('/').slice(-1)[0];
 

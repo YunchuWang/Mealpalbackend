@@ -1,6 +1,6 @@
 /**
- * Module dependencies.
- */
+* Module dependencies.
+*/
 const express = require('express');
 const compression = require('compression');
 const session = require('express-session');
@@ -19,36 +19,38 @@ const expressValidator = require('express-validator');
 const expressStatusMonitor = require('express-status-monitor');
 const sass = require('node-sass-middleware');
 const multer = require('multer');
-
+const cors = require('cors');
+const cookieParser = require('cookie-parser')
 const upload = multer({ dest: path.join(__dirname, 'uploads') });
 
 /**
- * Load environment variables from .env file, where API keys and passwords are configured.
- */
+* Load environment variables from .env file, where API keys and passwords are configured.
+*/
 dotenv.load({ path: '.env.example' });
 
 /**
- * Controllers (route handlers).
- */
+* Controllers (route handlers).
+*/
 const homeController = require('./controllers/home');
 const userController = require('./controllers/user');
 const apiController = require('./controllers/api');
 const contactController = require('./controllers/contact');
 const mealpalController = require('./controllers/index');
 /**
- * API keys and Passport configuration.
- */
+* API keys and Passport configuration.
+*/
 const passportConfig = require('./config/passport');
 
 /**
- * Create Express server.
- */
+* Create Express server.
+*/
 const app = express();
 
 /**
- * Connect to MongoDB.
- */
+* Connect to MongoDB.
+*/
 mongoose.Promise = global.Promise;
+// console.log(process.env.MONGODB_URI);
 mongoose.connect(process.env.MONGODB_URI || process.env.MONGOLAB_URI);
 mongoose.connection.on('error', () => {
   console.log('%s MongoDB connection error. Please make sure MongoDB is running.', chalk.red('✗'));
@@ -56,8 +58,8 @@ mongoose.connection.on('error', () => {
 });
 
 /**
- * Express configuration.
- */
+* Express configuration.
+*/
 app.set('port', process.env.PORT || 3002);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -71,6 +73,8 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(expressValidator());
+// app.use(cors({ credentials: true, origin: true }));
+app.use(cookieParser(process.env.SESSION_SECRET));
 app.use(session({
   resave: true,
   saveUninitialized: true,
@@ -97,40 +101,51 @@ app.use(lusca.xssProtection(true));
 app.use((req,res,next)=> {
   res.locals.user = req.user;
   // Website you wish to allow to connect
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
 
   // Request methods you wish to allow
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
   // Request headers you wish to allow
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
 
   // Set to true if you need the website to include cookies in the requests sent
   // to the API (e.g. in case you use sessions)
   res.setHeader('Access-Control-Allow-Credentials', true);
 
   // Pass to next layer of middleware
-  next();
+  if(!req.user && req.path !== '/login' && req.path !== '/signup') {
+    // console.log(req.user);
+    res.status(200).send({status:"fail"});
+  } else {
+    console.log("sakdljsakldj");
+    console.log(req.user);
+    return next();
+  }
+  // res.status(200).send("fail");
 })
 // app.use((req, res, next) => {
 //   // After successful login, redirect back to the intended page
-//   if (!req.user &&
-//       req.path !== '/login' &&
-//       req.path !== '/signup' &&
-//       !req.path.match(/^\/auth/) &&
-//       !req.path.match(/\./)) {
-//     req.session.returnTo = req.path;
-//   } else if (req.user &&
-//       req.path == '/account') {
-//     req.session.returnTo = req.path;
+//   // if (!req.user &&
+//   //     req.path !== '/login' &&
+//   //     req.path !== '/signup' &&
+//   //     !req.path.match(/^\/auth/) &&
+//   //     !req.path.match(/\./)) {
+//   //   req.session.returnTo = req.path;
+//   // } else if (req.user &&
+//   //     req.path == '/account') {
+//   //   req.session.returnTo = req.path;
+//   // }
+//   if(!req.user && req.path !== '/login' && req.path !== '/signup') {
+//     res.status(200).send("fail");
 //   }
-//
+//   return next();
 // });
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 
 /**
- * Primary app routes.
- */
+* Primary app routes.
+*/
 app.get('/', homeController.index);
 // app.get('/login', userController.getLogin);
 app.post('/login', userController.postLogin);
@@ -154,8 +169,8 @@ app.get('/post', mealpalController.getPost);
 app.post('/post', mealpalController.addPost);
 app.get('/users', userController.getUsers);
 /**
- * API examples routes.
- */
+* API examples routes.
+*/
 app.get('/api', apiController.getApi);
 app.get('/api/lastfm', apiController.getLastfm);
 app.get('/api/nyt', apiController.getNewYorkTimes);
@@ -187,8 +202,8 @@ app.post('/api/pinterest', passportConfig.isAuthenticated, passportConfig.isAuth
 app.get('/api/google-maps', apiController.getGoogleMaps);
 
 /**
- * OAuth authentication routes. (Sign in)
- */
+* OAuth authentication routes. (Sign in)
+*/
 app.get('/auth/instagram', passport.authenticate('instagram'));
 app.get('/auth/instagram/callback', passport.authenticate('instagram', { failureRedirect: '/login' }), (req, res) => {
   res.redirect(req.session.returnTo || '/');
@@ -215,8 +230,8 @@ app.get('/auth/linkedin/callback', passport.authenticate('linkedin', { failureRe
 });
 
 /**
- * OAuth authorization routes. (API examples)
- */
+* OAuth authorization routes. (API examples)
+*/
 app.get('/auth/foursquare', passport.authorize('foursquare'));
 app.get('/auth/foursquare/callback', passport.authorize('foursquare', { failureRedirect: '/api' }), (req, res) => {
   res.redirect('/api/foursquare');
@@ -235,16 +250,21 @@ app.get('/auth/pinterest/callback', passport.authorize('pinterest', { failureRed
 });
 
 /**
- * Error Handler.
- */
+* Error Handler.
+*/
 app.use(errorHandler());
 
 /**
- * Start Express server.
- */
+* Start Express server.
+*/
 app.listen(app.get('port'), () => {
   console.log('%s App is running at http://localhost:%d in %s mode', chalk.green('✓'), app.get('port'), app.get('env')); 
   console.log('  Press CTRL-C to stop\n');
 });
-
+process.on('SIGINT', function() {
+  mongoose.connection.close(function () {
+    console.log('Mongoose disconnected through app termination');
+    process.exit(0);
+  });
+});
 module.exports = app;
