@@ -13,7 +13,7 @@ exports.getPost = (req,res) => {
   //   console.log(error);
   // });
   // console.log(req);
-  Post.find({}).sort('-createdAt').exec(function(err, posts) {
+  Post.find({}).sort('-createdAt').limit(10).exec(function(err, posts) {
     if (err) return next(err);
     // console.log(posts);
     posts = posts.map(function(post) { return {description:post.description,availtime:post.time,location:post.location,key:post.createdAt}; });
