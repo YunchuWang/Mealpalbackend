@@ -3,10 +3,13 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  email: { type: String, unique: true },
-  password: String,
+  email: { type: String, unique: true, required: true},
+  firstname: {type: String, required: true},
+  lastname: {type: String, required: true},
+  username: {type: String, unique: true, required:true },
+  password: {type: String, required: true},
   passwordResetToken: String,
-  passwordResetExpires: Date,
+  passwordResetExpires: Date
 
   // facebook: String,
   // twitter: String,
@@ -17,16 +20,12 @@ const userSchema = new mongoose.Schema({
   // steam: String,
   // tokens: Array,
 
-  profile: {
-    username: String,
-    hobbies: String,
-    allergies: String,
-    schoolyear: String,
-    // gender: String,
-    // location: String,
-    // website: String,
-    // picture: String
-  }
+  // profile: {
+  //   // gender: String,
+  //   // location: String,
+  //   // website: String,
+  //   // picture: String
+  // }
 }, { timestamps: true });
 
 /**

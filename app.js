@@ -76,9 +76,10 @@ app.use(expressValidator());
 // app.use(cors({ credentials: true, origin: true }));
 app.use(cookieParser(process.env.SESSION_SECRET));
 app.use(session({
-  resave: true,
-  saveUninitialized: true,
+  resave: false,
+  saveUninitialized: false,
   secret: process.env.SESSION_SECRET,
+  cookie: { maxAge: 6000000 },
   store: new MongoStore({
     url: process.env.MONGODB_URI || process.env.MONGOLAB_URI,
     autoReconnect: true
@@ -107,19 +108,20 @@ app.use((req,res,next)=> {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
   // Request headers you wish to allow
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+  res.setHeader('Access-Control-Allow-Headers', 'X-HTTP-Method-Override, Content-Type, Accept');
 
   // Set to true if you need the website to include cookies in the requests sent
   // to the API (e.g. in case you use sessions)
   res.setHeader('Access-Control-Allow-Credentials', true);
 
   // Pass to next layer of middleware
-  if(!req.user && req.path !== '/login' && req.path !== '/signup') {
-    // console.log(req.user);
+
+  if(!req.isAuthenticated() && req.path !== '/login' && req.path !== '/signup') {
+    // console.log(req.path);
     res.status(200).send({status:"fail"});
   } else {
-    console.log("sakdljsakldj");
-    console.log(req.user);
+    // console.log("sakdljsakldj");
+    // console.log(req.user);
     return next();
   }
   // res.status(200).send("fail");
@@ -147,7 +149,7 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }))
 * Primary app routes.
 */
 app.get('/', homeController.index);
-// app.get('/login', userController.getLogin);
+app.get('/login', userController.getLogin);
 app.post('/login', userController.postLogin);
 app.get('/logout', userController.logout);
 app.get('/forgot', userController.getForgot);

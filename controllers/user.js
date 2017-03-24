@@ -9,14 +9,13 @@ const User = require('../models/User');
 * GET /login
 * Login page.
 */
-// exports.getLogin = (req, res) => {
-//   if (req.user) {
-//     return res.redirect('/');
-//   }
-//   res.render('account/login', {
-//     title: 'Login'
-//   });
-// };
+ exports.getLogin = (req, res) => {
+   if (req.user) {
+     res.status(200).send({status:"pass"});
+   } else {
+     res.status(200).send({status:"fail"});
+   }
+ };
 
 /**
 * POST /login
@@ -35,7 +34,7 @@ exports.postLogin = (req, res, next) => {
   // }
   // console.log(req);
   // console.log(req.body);
-  passport.authenticate('local', {session: true}, (err, user, info) => {
+  passport.authenticate('local',  (err, user, info) => {
     // console.log("sss");
     if (err) {
       res.status(200).send({status:"fail"});
@@ -53,7 +52,6 @@ exports.postLogin = (req, res, next) => {
       }
       // req.flash('success', { msg: 'Success! You are logged in.' });
       // res.redirect(req.session.returnTo || '/');
-
       res.status(200).send({status:"pass"});
       return next();
     });
@@ -64,9 +62,11 @@ exports.postLogin = (req, res, next) => {
 * GET /logout
 * Log out.
 */
-exports.logout = (req, res) => {
-  req.logout();
-  res.redirect('/');
+exports.logout = (req, res,next) => {
+  req.session.destroy(function (err) {
+    return next(err); //Inside a callback… bulletproof!
+  });
+  res.status(200).send({status:"pass"});
 };
 
 /**
@@ -102,11 +102,10 @@ exports.postSignup = (req, res, next) => {
 
   const user = new User({
     email: req.body.email,
-    password: req.body.password,
+    firstname: req.body.firstname,
+    lastname: req.body.lastname,
     username: req.body.username,
-    hobbies: req.body.hobbies,
-    allergies: req.body.allergies,
-    schoolyear: req.body.schoolyear
+    password: req.body.password
   });
 
   User.findOne({ email: req.body.email }, (err, existingUser) => {
@@ -123,7 +122,7 @@ exports.postSignup = (req, res, next) => {
       res.status(200).send({status:"fail",message:"Account exists!"});
       return next(err);
     }
-    console.log(user);
+    // console.log(user);
     user.save((err) => {
       if (err) {
         res.status(200).send({status:"fail"});
@@ -408,7 +407,7 @@ exports.postForgot = (req, res, next) => {
 exports.getUsers = (req,res,next) => {
   User.find({},function(err, users) {
     if (err) return next(err);
-    console.log(users);
+    // console.log(users);
     res.send(users);
   })
 }

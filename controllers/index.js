@@ -12,10 +12,24 @@ exports.getPost = (req,res) => {
   // }).catch(function (error) {
   //   console.log(error);
   // });
-  Post.find({}).sort('-time').exec(function(err, posts) {
+  // console.log(req);
+  Post.find({}).sort('-createdAt').exec(function(err, posts) {
     if (err) return next(err);
     // console.log(posts);
-    res.status(200).send(posts);
+    posts = posts.map(function(post) { return {description:post.description,availtime:post.time,location:post.location,key:post.createdAt}; });
+
+    var newarr = [];
+    var requests = [];
+    for (var row = 0; row < posts.length; row++) {
+      if(newarr.length < 3) {
+        newarr.push(posts[row]);
+      } else {
+        requests.push(newarr);
+        newarr = [];
+      }
+    }
+    if(newarr.length > 0) requests.push(newarr);
+    res.status(200).send({content:requests, length: posts.length});
   });
   // Post.find({}, function(err, posts) {
   //   if (err) return next(err);
@@ -27,6 +41,7 @@ exports.getPost = (req,res) => {
 exports.addPost = (req,res) => {
   // console.log("asdlkasj");
   // console.log(req.body);
+  // console.dir(req);
   var newPost = new Post({
     description: req.body.description,
     time: req.body.availtime,
@@ -34,7 +49,7 @@ exports.addPost = (req,res) => {
   });
   newPost.save((err,newPost)=>{
     if (err) return console.error(err);
-    console.dir(newPost);
+    // console.dir(newPost);
   });
   res.status(200).send("yeah");
 }
