@@ -15,16 +15,10 @@ const OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
 const User = require('../models/User');
 
 passport.serializeUser((user, done) => {
-  ///issue!
-  // console.log(user);
   done(null, user.id);
 });
 
 passport.deserializeUser((id, done) => {
-  // User.findById(id, (err, user) => {
-  //   done(err, user);
-  // });
-  // console.log("pasaakalsdjakldj");
   User.findById(id, function(err, user){
     if(err){
       done(err);
@@ -46,6 +40,7 @@ passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, don
     user.comparePassword(password, (err, isMatch) => {
       if (err) { return done(err); }
       if (isMatch) {
+        console.log("salkd");
         return done(null, user);
       }
       return done(null, false, { msg: 'Invalid email or password.' });

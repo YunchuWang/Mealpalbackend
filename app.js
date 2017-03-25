@@ -96,8 +96,8 @@ app.use(flash());
 //     lusca.csrf()(req, res, next);
 //   }
 // });
-app.use(lusca.xframe('SAMEORIGIN'));
-app.use(lusca.xssProtection(true));
+// app.use(lusca.xframe('SAMEORIGIN'));
+// app.use(lusca.xssProtection(true));
 
 app.use((req,res,next)=> {
   res.locals.user = req.user;
@@ -115,13 +115,10 @@ app.use((req,res,next)=> {
   res.setHeader('Access-Control-Allow-Credentials', true);
 
   // Pass to next layer of middleware
-
-  if(!req.isAuthenticated() && req.path !== '/login' && req.path !== '/signup') {
-    // console.log(req.path);
+  if(!req.isAuthenticated() && req.path !== '/login' && req.path !== '/signup' && !req.path.match('/confirmation/.*')) {
     res.status(200).send({status:"fail"});
   } else {
-    // console.log("sakdljsakldj");
-    // console.log(req.user);
+
     return next();
   }
   // res.status(200).send("fail");
@@ -152,6 +149,7 @@ app.get('/', homeController.index);
 app.get('/login', userController.getLogin);
 app.post('/login', userController.postLogin);
 app.get('/logout', userController.logout);
+app.get('/confirmation/:token', userController.getConfirmation);
 app.get('/forgot', userController.getForgot);
 app.post('/forgot', userController.postForgot);
 app.get('/reset/:token', userController.getReset);
@@ -160,7 +158,7 @@ app.post('/reset/:token', userController.postReset);
 app.post('/signup', userController.postSignup);
 app.get('/contact', contactController.getContact);
 app.post('/contact', contactController.postContact);
-app.get('/account', passportConfig.isAuthenticated, userController.getAccount);
+// app.get('/activation', passportConfig.isAuthenticated, userController.getActivation);
 app.post('/account/profile', passportConfig.isAuthenticated, userController.postUpdateProfile);
 app.post('/account/password', passportConfig.isAuthenticated, userController.postUpdatePassword);
 app.post('/account/delete', passportConfig.isAuthenticated, userController.postDeleteAccount);
