@@ -170,6 +170,7 @@ exports.postSignup = (req, res, next) => {
           if (err) { return next(err); }
           // res.status(200).send({status:"fail"});
         });
+        req.flash('confirmation', "Please verify your account by email");
         res.send({status: "pass"});
         return next();
       });
@@ -197,36 +198,22 @@ exports.getConfirmation = (req,res) => {
     if (err) { return next(err); }
     if (!user) {
       res.status(200).send({status:"fail"});
+    } else {
+      user.activated = true;
+      user.save((err,next) => {
+        if(err) {
+          return next(err);
+        } else {
+          res.status(200).send({status:"pass", message:"account activated"});
+        }
+      });
     }
-    user.activated = true;
-    user.save((err,next) => {
-      if(err) {
-        return next(err);
-      } else {
-        res.status(200).send({status:"pass", message:"account activated"});
-      }
-    });
+
 
   });
 }
 
-/**
-* POST /confirmation
-*
-*/
-exports.postConfirmation = (req, res, next) => {
-  // req.assert('email', 'Please enter a valid email address.').isEmail();
-  // req.sanitize('email').normalizeEmail({ remove_dots: false });
-  //
-  // const errors = req.validationErrors();
-  //
-  // if (errors) {
-  //   req.flash('errors', errors);
-  //   return res.redirect('/forgot');
-  // }
 
-
-};
 
 /**
 * POST /account/profile
