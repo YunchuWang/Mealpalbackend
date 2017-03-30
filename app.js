@@ -102,7 +102,7 @@ app.use(flash());
 app.use((req,res,next)=> {
   res.locals.user = req.user;
   // Website you wish to allow to connect
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
 
   // Request methods you wish to allow
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -115,7 +115,7 @@ app.use((req,res,next)=> {
   res.setHeader('Access-Control-Allow-Credentials', true);
 
   // Pass to next layer of middleware
-  if(!req.isAuthenticated() && req.path !== '/login' && req.path !== '/signup' && !req.path.match('/confirmation/.*')) {
+  if(!req.isAuthenticated() && req.path !== '/login' && req.path !== '/signup' && req.path !== '/forgot' && !req.path.match('/confirmation/.*') && !req.path.match('/reset/.*')) {
     res.status(200).send({status:"fail"});
   } else {
 
