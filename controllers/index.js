@@ -1,7 +1,17 @@
 //Import Model
 const Post = require('../models/Post');
 const axios = require('axios');
+const moment = require('moment');
 // Meal Pal restful apis
+const timeformat = {
+    sameDay: '[Today at] LT',
+    nextDay: '[Tomorrow] LT',
+    nextWeek: 'dddd LT',
+    lastDay: '[Yesterday] LT',
+    lastWeek: '[Last] dddd LT',
+    sameElse: 'YYYY/MM/DD LT'
+}
+
 exports.helloworld = function(req,res) {
   res.send("hello world");
 }
@@ -16,7 +26,7 @@ exports.getPost = (req,res) => {
   Post.find({}).sort('-createdAt').limit(10).exec(function(err, posts) {
     if (err) return next(err);
     // console.log(posts);
-    posts = posts.map(function(post) { return {description:post.description,availtime:post.time,location:post.location,key:post.createdAt}; });
+    posts = posts.map(function(post) { return {description:post.description,availtime:moment(post.time).calendar(null,timeformat),location:post.location,key:post.createdAt}; });
 
     var newarr = [];
     var requests = [];
