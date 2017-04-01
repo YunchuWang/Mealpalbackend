@@ -44,6 +44,7 @@ exports.getPost = (req,res) => {
       } else {
         requests.push(newarr);
         newarr = [];
+        newarr.push(posts[row]);
       }
     }
     if(newarr.length > 0) requests.push(newarr);
