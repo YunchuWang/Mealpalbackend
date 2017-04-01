@@ -10,7 +10,8 @@
   "license": "MIT",
   "scripts": {
     "start": "node app.js",
-    "test": "mocha --reporter spec"
+    "test": "mocha --reporter spec",
+    "postinstall": "npm rebuild node-sass"
   },
   "dependencies": {
     "async": "^2.1.2",
@@ -44,6 +45,7 @@
     "multer": "^1.2.0",
     "node-foursquare": "^0.3.0",
     "node-linkedin": "^0.5.4",
+    "node-sass": "^4.5.2",
     "node-sass-middleware": "^0.10.0",
     "nodemailer": "^2.6.4",
     "passport": "0.3.2",
