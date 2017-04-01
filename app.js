@@ -253,18 +253,15 @@ app.get('/auth/pinterest/callback', passport.authorize('pinterest', { failureRed
 /**
 * Pusher realtime feed system
 */
-// var Pusher = require('pusher');
-//
-// var pusher = new Pusher({
-//   appId: '322279',
-//   key: 'dbcd20122522e32d0f31',
-//   secret: '5d877ca6ea345cc149ab',
-//   encrypted: true
-// });
-//
-// pusher.trigger('my-channel', 'my-event', {
-//   "message": "hello world"
-// });
+var Pusher = require('pusher');
+
+var pusher = new Pusher({
+  appId: '322279',
+  key: 'dbcd20122522e32d0f31',
+  secret: '5d877ca6ea345cc149ab',
+  encrypted: true
+});
+
 /**
 * Error Handler.
 */

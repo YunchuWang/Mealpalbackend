@@ -2,6 +2,7 @@
 const Post = require('../models/Post');
 const axios = require('axios');
 const moment = require('moment');
+const Pusher = require('pusher');
 // Meal Pal restful apis
 const timeformat = {
     sameDay: '[Today at] LT',
@@ -11,6 +12,13 @@ const timeformat = {
     lastWeek: '[Last] dddd LT',
     sameElse: 'YYYY/MM/DD LT'
 }
+
+var pusher = new Pusher({
+  appId: '322279',
+  key: 'dbcd20122522e32d0f31',
+  secret: '5d877ca6ea345cc149ab',
+  encrypted: true
+});
 
 exports.helloworld = function(req,res) {
   res.send("hello world");
@@ -60,6 +68,9 @@ exports.addPost = (req,res) => {
   newPost.save((err,newPost)=>{
     if (err) return console.error(err);
     // console.dir(newPost);
+  });
+  pusher.trigger('request-channel', 'request-event', {
+    "message": "update"
   });
   res.status(200).send("yeah");
 }
