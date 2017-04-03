@@ -102,6 +102,7 @@ app.use(lusca.xssProtection(true));
 app.use((req,res,next)=> {
   res.locals.user = req.user;
   // Website you wish to allow to connect
+  // res.setHeader('Access-Control-Allow-Origin', 'https://safe-springs-56193.herokuapp.com');
   res.setHeader('Access-Control-Allow-Origin', 'https://tranquil-dusk-68083.herokuapp.com');
   // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
   // Request methods you wish to allow
