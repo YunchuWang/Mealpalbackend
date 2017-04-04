@@ -3,7 +3,9 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const passport = require('passport');
 const User = require('../models/User');
+const pusher = require('../pusherobj/pusher');
 //mealpal stuff
+var timeoutlog;
 let transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -32,48 +34,45 @@ exports.getLogin = (req, res) => {
 * Sign in using email and password.
 */
 exports.postLogin = (req, res, next) => {
-  // req.assert('email', 'Email is not valid').isEmail();
-  // req.assert('password', 'Password cannot be blank').notEmpty();
-  // req.sanitize('email').normalizeEmail({ remove_dots: false });
-  //
-  // const errors = req.validationErrors();
-  //
-  // if (errors) {
-  //   req.flash('errors', errors);
-  //   return res.redirect('/login');
-  // }
   passport.authenticate('local',  (err, user, info) => {
-    // console.log("sss");
     if (err) {
-      res.status(200).send({status:"fail"});
+      console.log(info);
+      res.status(200).send({status:"fail",error:info.msg});
       return next(err);
     }
     if (!user) {
-      res.status(200).send({status:"fail"});
+      res.status(200).send({status:"fail",error:info.msg});
       return next(err);
     }
     req.logIn(user, (err) => {
       if (err) {
         // console.log("sss");
-        res.status(200).send({status:"fail"});
+        res.status(200).send({status:"fail",error:"internal server error"});
         return next(err);
       }
       // res.redirect(req.session.returnTo || '/');
       // console.log("paklsdjaskldjaskljdlasass");
-      res.status(200).send({status:"pass"});
-      return next();
-    });
-  })(req, res, next);
+      timeoutlog = setTimeout(()=> {
+        pusher.trigger('logout-channel', 'logout-event', {
+          "message": "logout"
+        }
+      )
+    },5990000);
+    res.status(200).send({status:"pass"});
+    return next();
+  });
+})(req, res, next);
 };
 
 /**
 * GET /logout
 * Log out.
 */
-exports.logout = (req, res,next) => {
+exports.logout = (req, res, next) => {
   req.session.destroy(function (err) {
     return next(err); //Inside a callback… bulletproof!
   });
+  clearTimeout(timeoutlog);
   res.status(200).send({status:"pass"});
 };
 
@@ -118,60 +117,61 @@ exports.postSignup = (req, res, next) => {
   User.findOne({ email: req.body.email }, (err, existingUser) => {
     if (err) {
       // console.log(err);
-      res.status(200).send({status:"fail"});
+      res.status(200).send({status:"fail",error:"internal server error."});
       return next(err);
     }
     if (existingUser) {
-      res.status(200).send({status:"fail",message:"Account exists!"});
+      res.status(200).send({status:"fail",error:"Email account exists!"});
       return next(err);
     }
     // console.log(user);
     user.save((err) => {
       if (err) {
-        res.status(200).send({status:"fail"});
+        res.status(200).send({status:"fail",error:err.errors.username.message});
         return next(err);
       }
-      req.logIn(user, (err) => {
-        if (err) {
-          return next(err);
-        }
-        async.waterfall([
-          function createRandomToken(done) {
-            crypto.randomBytes(16, (err, buf) => {
-              const token = buf.toString('hex');
-              done(err, token);
-            });
-          },
-          function setRandomToken(token, done) {
-            user.confirmationToken = token;
-            user.confirmationExpires = Date.now() + 3600000; // 1 hour
-            user.save((err) => {
-              done(err, token, user);
-            });
-          },
 
-          function sendConfirmationEmail(token, user, done) {
-            const mailOptions = {
-              to: user.email,
-              from: 'yunchuwang5@gmail.com',
-              subject: 'Meal Pal account activation',
-              text: `Click on the link to activate your meal pal account
-              http://${req.headers.host}/confirmation/${token}\n\n
-              \n`
-            };
-            transporter.sendMail(mailOptions, (err) => {
-              // req.flash('info', { msg: `An e-mail has been sent to ${user.email} with further instructions.` });
-              done(err);
-            });
-          }
-        ], (err) => {
-          if (err) { return next(err); }
-          // res.status(200).send({status:"fail"});
-        });
-        req.flash('confirmation', "Please verify your account by email");
-        res.send({status: "pass"});
-        return next();
+      async.waterfall([
+        function createRandomToken(done) {
+          crypto.randomBytes(16, (err, buf) => {
+            const token = buf.toString('hex');
+            done(err, token);
+          });
+        },
+        function setRandomToken(token, done) {
+          user.confirmationToken = token;
+          user.confirmationExpires = Date.now() + 3600000; // 1 hour
+          user.save((err) => {
+            done(err, token, user);
+          });
+        },
+
+        function sendConfirmationEmail(token, user, done) {
+          const mailOptions = {
+            to: user.email,
+            from: 'yunchuwang5@gmail.com',
+            subject: 'Meal Pal account activation',
+            text: `Click on the link to activate your meal pal account
+            http://${req.headers.host}/confirmation/${token}\n\n
+            \n`
+          };
+          transporter.sendMail(mailOptions, (err) => {
+            // req.flash('info', { msg: `An e-mail has been sent to ${user.email} with further instructions.` });
+            done(err);
+          });
+        }
+      ], (err) => {
+        if (err) {
+          res.send({status: "fail",error:"Failed to send. Please contact author."});
+          return next(err);
+        } else {
+          res.send({status: "pass",success:`An e-mail has been sent to ${user.email} with further instructions.`});
+          return next();
+        }
+
       });
+
+
     });
   });
 };
@@ -317,8 +317,7 @@ exports.getReset = (req, res, next) => {
   .exec((err, user) => {
     if (err) { return next(err); }
     if (!user) {
-      req.flash('errors', { msg: 'Password reset token is invalid or has expired.' });
-      return res.send({status:"fail"})
+      return res.send({status:"fail",error:'Password reset token is invalid or has expired.'})
     }
     res.render('account/reset', {
       title: 'Password Reset'
@@ -419,8 +418,8 @@ exports.postForgot = (req, res, next) => {
       User.findOne({ email: req.body.email }, (err, user) => {
         if (err) { return done(err); }
         if (!user) {
-          req.flash('errors', { msg: 'Account with that email address does not exist.' });
-          return res.redirect('/forgot');
+          res.status(200).send({status:"fail",error:'Account with that email address does not exist.'});
+          return next();
         }
         user.passwordResetToken = token;
         user.passwordResetExpires = Date.now() + 3600000; // 1 hour
@@ -440,15 +439,19 @@ exports.postForgot = (req, res, next) => {
         If you did not request this, please ignore this email and your password will remain unchanged.\n`
       };
       transporter.sendMail(mailOptions, (err) => {
-        req.flash('info', { msg: `An e-mail has been sent to ${user.email} with further instructions.` });
-        done(err);
+        done(err,user);
       });
     }
-  ], (err) => {
-    if (err) { return next(err); };
+  ], (err,user) => {
+    if (err) {
+      res.send({status: "fail",error:"Failed to send. Please contact author."});
+      return next(err);
+    } else {
+      res.send({status:"pass",success:`A reset password e-mail has been sent to ${user.email} with further instructions.`});
+      return next();
+    }
   });
-  res.send({status:"pass"});
-  return next();
+
 };
 
 exports.getUsers = (req,res,next) => {

@@ -2,7 +2,8 @@
 const Post = require('../models/Post');
 const axios = require('axios');
 const moment = require('moment');
-const Pusher = require('pusher');
+const pusher = require('../pusherobj/pusher');
+// const Pusher = require('pusher');
 // Meal Pal restful apis
 const timeformat = {
     sameDay: '[Today at] LT',
@@ -13,12 +14,12 @@ const timeformat = {
     sameElse: 'YYYY/MM/DD LT'
 }
 
-var pusher = new Pusher({
-  appId: '322279',
-  key: 'dbcd20122522e32d0f31',
-  secret: '5d877ca6ea345cc149ab',
-  encrypted: true
-});
+// var pusher = new Pusher({
+//   appId: '322279',
+//   key: 'dbcd20122522e32d0f31',
+//   secret: '5d877ca6ea345cc149ab',
+//   encrypted: true
+// });
 
 exports.helloworld = function(req,res) {
   res.send("hello world");

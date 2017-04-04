@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt-nodejs');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
+var uniqueValidator = require('mongoose-unique-validator');
 
 const userSchema = new mongoose.Schema({
   email: { type: String, unique: true, required: true},
@@ -68,7 +69,7 @@ userSchema.methods.gravatar = function gravatar(size) {
   const md5 = crypto.createHash('md5').update(this.email).digest('hex');
   return `https://gravatar.com/avatar/${md5}?s=${size}&d=retro`;
 };
-
+userSchema.plugin(uniqueValidator);
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
