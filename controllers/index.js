@@ -3,8 +3,8 @@ const Post = require('../models/Post');
 const axios = require('axios');
 const moment = require('moment');
 const pusher = require('../pusherobj/pusher');
-// const Pusher = require('pusher');
-// Meal Pal restful apis
+const numperpage = 9;
+var last_id;
 const timeformat = {
     sameDay: '[Today at] LT',
     nextDay: '[Tomorrow] LT',
@@ -14,54 +14,69 @@ const timeformat = {
     sameElse: 'YYYY/MM/DD LT'
 }
 
-// var pusher = new Pusher({
-//   appId: '322279',
-//   key: 'dbcd20122522e32d0f31',
-//   secret: '5d877ca6ea345cc149ab',
-//   encrypted: true
-// });
-
 exports.helloworld = function(req,res) {
   res.send("hello world");
 }
 
 exports.getPost = (req,res) => {
-  // axios.post('https://onyen.unc.edu/cgi-bin/unc_id/authenticator.pl').then(function(res){
-  //   console.log(res);
-  // }).catch(function (error) {
-  //   console.log(error);
-  // });
-  // console.log(req);
-  Post.find({}).sort('-createdAt').limit(100).exec(function(err, posts) {
-    if (err) return next(err);
-    // console.log(posts);
-    posts = posts.map(function(post) { return {description:post.description,availtime:moment(post.time).calendar(null,timeformat),location:post.location,key:post.createdAt}; });
-
-    var newarr = [];
-    var requests = [];
-    for (var row = 0; row < posts.length; row++) {
-      if(newarr.length < 3) {
-        newarr.push(posts[row]);
-      } else {
-        requests.push(newarr);
-        newarr = [];
-        newarr.push(posts[row]);
+  if(req.params.page <= 1) {
+    Post.find().sort('-_id').limit(numperpage).exec(function(err, posts) {
+      if (err) res.status(200).send({err:err});
+      if(posts.length > 0) {
+        last_id = posts[posts.length - 1]._id;
+      }  else {
+        last_id = 1000000000000000000000000;
       }
-    }
-    if(newarr.length > 0) requests.push(newarr);
-    res.status(200).send({content:requests, length: posts.length});
-  });
-  // Post.find({}, function(err, posts) {
-  //   if (err) return next(err);
-  //   console.log(posts);
-  //   res.send(posts);
-  // });
+      posts = posts.map(function(post) {
+        return {description:post.description,availtime:moment(post.time).calendar(null,timeformat),location:post.location,key:post.createdAt};
+      });
+      var newarr = [];
+      var requests = [];
+      for (var row = 0; row < posts.length; row++) {
+        if(newarr.length < 3) {
+          newarr.push(posts[row]);
+        } else {
+          requests.push(newarr);
+          newarr = [];
+          newarr.push(posts[row]);
+        }
+      }
+      if(newarr.length > 0) requests.push(newarr);
+      res.status(200).send({content:requests, length: posts.length});
+    });
+  } else {
+    Post.find({'_id': {$lt:last_id}}).sort('-_id').limit(numperpage).exec(function(err, posts) {
+      if (err) res.status(200).send({err:err});
+      else {
+        if(posts.length > 0) {
+          last_id = posts[posts.length - 1]._id;
+        } else {
+          last_id = 1000000000000000000000000;
+        }
+        posts = posts.map(function(post) {
+          return {description:post.description,availtime:moment(post.time).calendar(null,timeformat),location:post.location,key:post.createdAt};
+        });
+        var newarr = [];
+        var requests = [];
+        for (var row = 0; row < posts.length; row++) {
+          if(newarr.length < 3) {
+            newarr.push(posts[row]);
+          } else {
+            requests.push(newarr);
+            newarr = [];
+            newarr.push(posts[row]);
+          }
+        }
+        if(newarr.length > 0) requests.push(newarr);
+        res.status(200).send({content:requests, length: posts.length});
+      }
+
+    });
+  }
+
 }
 
 exports.addPost = (req,res) => {
-  // console.log("asdlkasj");
-  // console.log(req.body);
-  // console.dir(req);
   var newPost = new Post({
     description: req.body.description,
     time: req.body.availtime,
@@ -69,10 +84,6 @@ exports.addPost = (req,res) => {
   });
   newPost.save((err,newPost)=>{
     if (err) return console.error(err);
-    // console.dir(newPost);
-    pusher.trigger('request-channel', 'request-event', {
-      "message": "update"
-    });
   });
 
   res.status(200).send("yeah");

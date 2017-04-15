@@ -22,10 +22,10 @@ exports.getLogin = (req, res) => {
     if(req.user.activated) {
       res.status(200).send({status:"pass"});
     } else {
-      res.status(200).send({status:"fail"});
+      res.status(200).send({status:"fail",error:"Please log in first."});
     }
   } else {
-    res.status(200).send({status:"fail"});
+    res.status(200).send({status:"fail",error:"Please log in first."});
   }
 };
 

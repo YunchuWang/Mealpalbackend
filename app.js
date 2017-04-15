@@ -103,8 +103,8 @@ app.use((req,res,next)=> {
   res.locals.user = req.user;
   // Website you wish to allow to connect
   // res.setHeader('Access-Control-Allow-Origin', 'https://safe-springs-56193.herokuapp.com');
-  // res.setHeader('Access-Control-Allow-Origin', 'https://tranquil-dusk-68083.herokuapp.com');
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Origin', 'https://tranquil-dusk-68083.herokuapp.com');
+  // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
   // Request methods you wish to allow
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
@@ -117,7 +117,7 @@ app.use((req,res,next)=> {
 
   // Pass to next layer of middleware
   if(!req.isAuthenticated() && req.path !== '/login' && req.path !== '/signup' && req.path !== '/forgot' && !req.path.match('/confirmation/.*') && !req.path.match('/reset/.*')) {
-    res.status(200).send({status:"fail"});
+    res.status(200).send({status:"fail",error:"Please log in first."});
   } else {
 
     return next();
@@ -166,7 +166,7 @@ app.post('/account/delete', passportConfig.isAuthenticated, userController.postD
 app.get('/account/unlink/:provider', passportConfig.isAuthenticated, userController.getOauthUnlink);
 //meal pal
 app.get('/helloworld', mealpalController.helloworld);
-app.get('/post', mealpalController.getPost);
+app.get('/post/:page', mealpalController.getPost);
 app.post('/post', mealpalController.addPost);
 app.get('/users', userController.getUsers);
 /**
