@@ -84,7 +84,12 @@ exports.addPost = (req,res) => {
   });
   newPost.save((err,newPost)=>{
     if (err) return console.error(err);
+    else {
+      pusher.trigger('update-channel', 'update-event', {
+        "message": "update"
+      });
+      res.status(200).send("pass");
+    }
   });
-
-  res.status(200).send("yeah");
+  // res.status(200).send("yeah");
 }
